@@ -1,0 +1,74 @@
+
+# Global settings
+global: 
+  exp_name: "pearl_leaderfollower_singleagent"
+  device: "cpu"
+
+# Environment settings
+env:
+  env_type: "leaderfollower_singleagent"
+  env_params: # See envs constructor for envs specific parameters
+    T: 100
+    dt: 0.1
+    parametric_target: True
+    random_init: True
+    parametric_flow: False
+    follow_target: True
+    sparse_reward: True 
+    soft_reward_scale: 100.0
+    soft_reward_damping: 100.0
+    save_plots: False
+    save_gifs: False
+   
+# Logger settings
+logger:
+  logger_type: "wandb"
+  track: False
+  mode: "online"
+  logger_params:
+    project_name: "leaderfollower_singleagent"
+
+# Agent settings
+agent:
+  agent_type: "pearl_agent"
+  agent_params:
+    actor:
+      state_units: [64, 64]
+      param_units: [64, 64]
+      head_units: [64, 64]
+      activation: tanh
+      actor_logstd_init: -1.0
+    adjoint_net:
+      state_units: [64, 64]
+      param_units: [64, 64]
+      head_units: [64, 64]
+      activation: tanh
+    parametric: True 
+    deterministic: False
+    last_activation: False
+
+# Trainer settings
+trainer:
+  trainer_type: "pearl_trainer"
+  trainer_params:
+    max_steps: 1500000
+    actor_learning_rate: 0.0001
+    adjoint_net_learning_rate: 0.00001 
+    adam_eps: 1e-08
+    target_adjoint_net_alpha: 0.995
+    adjoint_net_iterations: 32
+    grad_clip: False
+    max_grad_norm: 1.0
+    short_horizon: 16
+    adjoint_net_lambda: 0.95
+    gamma: 0.99
+    evaluations: 10
+    save_model: False
+    save_intervals: 1000
+    plot_intervals: 1000
+
+
+
+
+
+

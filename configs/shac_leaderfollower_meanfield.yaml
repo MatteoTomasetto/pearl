@@ -1,0 +1,70 @@
+
+# Global settings
+global: 
+  exp_name: "shac_leaderfollower_meanfield"
+  device: "cpu"
+
+# Environment settings
+env:
+  env_type: "leaderfollower_meanfield"
+  env_params: # See envs constructor for envs specific parameters
+    random_init: True
+    random_target: True
+    T: 20.0
+    dt: 0.2
+    beta: 0.1
+    beta_g: 0.1
+    save_plots: False
+    save_gifs: False
+
+# Logger settings
+logger:
+  logger_type: "wandb"
+  track: False
+  mode: "online"
+  logger_params:
+    project_name: "leaderfollower_meanfield"
+
+# Agent settings
+agent:
+  agent_type: "shac_agent"
+  agent_params:
+    actor:
+      state_units: [1024, 1024]
+      param_units: [1024, 1024]
+      head_units: [1024, 1024]
+      activation: tanh
+      actor_logstd_init: -1.0
+    critic:
+      state_units: [1024, 1024]
+      param_units: [1024, 1024]
+      head_units: [1024, 1024]
+      activation: tanh
+    parametric: True
+    deterministic: True
+    last_activation: False
+
+# Trainer settings
+trainer:
+  trainer_type: "shac_trainer"
+  trainer_params:
+    max_steps: 100000
+    actor_learning_rate: 0.00001
+    critic_learning_rate: 0.00001
+    rew_scale: 1.0
+    adam_betas: [0.9, 0.999]
+    adam_eps: 1e-08
+    target_critic_alpha: 0.995
+    critic_iterations: 16
+    grad_clip: False
+    max_grad_norm: 1.0
+    short_horizon: 16
+    critic_method: "td-lambda"
+    critic_lambda: 0.95
+    gamma: 0.99
+    evaluations: 10    
+    save_model: False
+    save_intervals: 1000
+    plot_intervals: 1000
+
+
