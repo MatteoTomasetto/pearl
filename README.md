@@ -1,6 +1,6 @@
 # Physics-enhanced reinforcement learning for real-time optimal control of dynamical systems
 
-[![arXiv](https://img.shields.io/badge/PREPRINT-FF00FF)](https://arxiv.org/abs/2607.16177)
+[![arXiv](https://img.shields.io/badge/PAPER-FF00FF)](https://arxiv.org/abs/2607.16177)
 
 <p align="center" width="100%">
   <img width=80% src="./media/pearl.png" >
