@@ -1,15 +1,22 @@
 name: pearl
 channels:
+  - conda-forge
+  - pytorch
+  - defaults
   - https://repo.anaconda.com/pkgs/main
   - https://repo.anaconda.com/pkgs/r
 dependencies:
-  - pyyaml
+  - python=3.9
   - pytorch
   - scipy
-  - tqdm
   - matplotlib
-  - python=3.9
-  - dolfin-adjoint=2019.1.0
+  - seaborn
   - fenics=2019.1.0
+  - dolfin-adjoint=2019.1.0
+  - gymnasium
+  - pyyaml
+  - wandb
+  - tqdm
   - imageio
   - ipykernel
+prefix: /home/matte/miniconda3/envs/pearl
