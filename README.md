@@ -19,7 +19,6 @@ The required packages are listed in  the `environment.yml` file and may be insta
 ```bash
 conda env create -f environment.yml
 ```
-The test cases required FEniCS to generate and handle function data. [Click here](https://fenicsproject.org/download/archive/) for installation instructions.
 
 ## Cite
 If you use this code for your work, please cite
