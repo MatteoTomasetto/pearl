@@ -1,0 +1,15 @@
+name: pearl
+channels:
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - pyyaml
+  - pytorch
+  - scipy
+  - tqdm
+  - matplotlib
+  - python=3.9
+  - dolfin-adjoint=2019.1.0
+  - fenics=2019.1.0
+  - imageio
+  - ipykernel
