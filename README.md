@@ -15,7 +15,7 @@ python run.py --agent-type={bptt, shac, pearl} --experiment-type={leaderfollower
 ```
 
 ## Getting started
-The required packages are listed in  the `environment.yml` file and may be installed in few minutes through the command 
+The required packages are listed in  the `environment.yml` file and may be installed through the command 
 ```bash
 conda env create -f environment.yml
 ```
