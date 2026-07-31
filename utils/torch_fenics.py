@@ -8,18 +8,18 @@ class PDE(torch.autograd.Function):
     @staticmethod
     def forward(ctx, y_old, u, env):
         
-        # Initialize tape
+        # initialize tape
         tape = Tape()
         set_working_tape(tape)
 
-        # Convert torch tensors to fenics functions
+        # convert torch tensors to fenics functions
         y_old_fun = env.vec2fun(y_old, env.Y)
         u_fun = env.vec2fun(u, env.U)
         
-        # Physics solve
+        # physics solve
         y_new_fun = env.compute_state(y_old_fun, u_fun) 
 
-        # Store for backward
+        # store for backward
         ctx.env = env
         ctx.tape = tape
         ctx.y_old_fun = y_old_fun
@@ -31,14 +31,14 @@ class PDE(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_output):
         
-        # Initialize tape
+        # initialize tape
         env = ctx.env
         set_working_tape(ctx.tape)
 
-        # Convert torch tensors to fenics functions
+        # convert torch tensors to fenics functions
         adj_value = env.vec2fun(grad_output, env.Y)
 
-        # Compute VJPs
+        # compute VJPs
         dF_dy = compute_gradient(ctx.y_new_fun, Control(ctx.y_old_fun), adj_value = adj_value.vector())
         dF_du = compute_gradient(ctx.y_new_fun, Control(ctx.u_fun), adj_value = adj_value.vector())
 
@@ -50,18 +50,18 @@ class Cost(torch.autograd.Function):
     @staticmethod
     def forward(ctx, y_new, u, env):
         
-        # Initialize tape
+        # initialize tape
         tape = Tape()
         set_working_tape(tape)
         
-        # Convert torch tensors to fenics functions
+        # convert torch tensors to fenics functions
         y_new_fun = env.vec2fun(y_new, env.Y)
         u_fun = env.vec2fun(u, env.U)
         
-        # Compute cost
+        # compute cost
         J = assemble(env.compute_cost(y_new_fun, u_fun))
         
-        # Store for backward
+        # store for backward
         ctx.env = env
         ctx.tape = tape
         ctx.y_new_fun = y_new_fun
@@ -73,11 +73,11 @@ class Cost(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_output):
         
-        # Initialize tape
+        # initialize tape
         env = ctx.env
         set_working_tape(ctx.tape)
         
-        # Compute VJPs
+        # compute VJPs
         dJ_dy = compute_gradient(ctx.J, Control(ctx.y_new_fun))
         dJ_du = compute_gradient(ctx.J, Control(ctx.u_fun))
         

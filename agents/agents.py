@@ -20,11 +20,10 @@ class Actor(nn.Module):
         super(Actor, self).__init__()
 
         self.device = cfg_network["device"]
-        self.deterministic = cfg_network["deterministic"]
+        self.deterministic = cfg_network['actor']["deterministic"]
+        self.last_activation = cfg_network['actor']["last_activation"]
         self.parametric = cfg_network["parametric"]
         self.param_dim = param_dim
-
-        self.last_activation = cfg_network["last_activation"]
 
         if self.parametric:
             state_layer_dims = [state_dim] + cfg_network['actor']['state_units']

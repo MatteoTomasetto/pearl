@@ -35,14 +35,14 @@ agent:
       head_units: [1024, 1024]
       activation: tanh
       actor_logstd_init: -1.0
+      deterministic: True
+      last_activation: False
     critic:
       state_units: [1024, 1024]
       param_units: [1024, 1024]
       head_units: [1024, 1024]
       activation: tanh
     parametric: True
-    deterministic: True
-    last_activation: False
 
 # Trainer settings
 trainer:
@@ -52,8 +52,6 @@ trainer:
     actor_learning_rate: 0.00001
     critic_learning_rate: 0.00001
     rew_scale: 1.0
-    adam_betas: [0.9, 0.999]
-    adam_eps: 1e-08
     target_critic_alpha: 0.995
     critic_iterations: 16
     grad_clip: False

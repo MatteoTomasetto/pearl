@@ -5,12 +5,15 @@ class BPTT:
 
         self.experiment_manager = manager
 
+        # env
         self.env = env
+
+        # agent
         self.actor = agent
 
+        # config params
         params = config["trainer_params"]
         self.actor_optimizer = torch.optim.Adam(params=self.actor.parameters(), lr=float(params["actor_learning_rate"]))
-
         self.seed = params["seed"]     
         self.max_steps = params["max_steps"]
         self.steps_num = params['short_horizon']
@@ -25,7 +28,7 @@ class BPTT:
         self.plot_intervals = params['plot_intervals']
         self.track = params['track']
 
-        # for logging
+        # counters
         self.step_count = 0
         self.episode_reward = 0
         self.episode_len = 0
@@ -35,65 +38,66 @@ class BPTT:
         self.steps_done = self.steps_num
 
     def compute_actor_loss(self):
-        rew_acc = torch.zeros(1,  device=self.device)
-        gamma = torch.tensor(1.0, device = self.device)
-       
-        state = self.env.initialize_trajectory()
-       
-        actor_loss = torch.tensor(0.0, device=self.device)
 
+        # initialize short-horizon
+        state = self.env.initialize_trajectory()
+        rew_acc = torch.zeros(1,  device=self.device)
+        gamma = torch.tensor(1.0, device = self.device)       
+        actor_loss = torch.tensor(0.0, device=self.device)
         self.steps_done = torch.tensor(self.steps_num, device=self.device)
 
+        # short-horizon rollout
         for i in range(self.steps_num):
-            # action
+            # compute action
             actions = self.actor(state.unsqueeze(0), self.env.get_parameters().unsqueeze(0)) if self.parametric else self.actor(state.unsqueeze(0))
-            state, rew, done, info = self.env.step(torch.tanh(actions))
 
+            # apply action
+            state, rew, done, info = self.env.step(torch.tanh(actions))
             self.step_count += 1
             self.episode_len += 1
-            self.episode_reward += rew
 
-            # raw reward 
+            # compute reward 
+            self.episode_reward += rew
             rew = rew.view(1).to(self.device)
 
             # accumulate discounted reward
             rew_acc = rew_acc + gamma * rew
 
+            # update gamma
             gamma = gamma * self.gamma
 
+            # compute actor loss at the end of the episode/short-horizon
             if done or i == self.steps_num - 1:
                 actor_loss = -rew_acc
 
+            # episode ends
             if done:
 
                 self.episode_count += 1
-
                 print(f"Episode {self.episode_count} | Reward: {self.episode_reward:.4f} | Episode Length: {self.episode_len}")
 
-                # Logging
+                # logging
                 if self.track:
                     self.experiment_manager.log_metrics(metrics={'train/episode_reward': self.episode_reward}, step=self.step_count)
 
-                # Rendering
+                # rendering
                 if (self.env.save_plots or self.env.save_gifs) and (self.episode_count % self.plot_intervals == 0):
                     save_dir = self.experiment_manager.get_media_path(filename=f"episode_{self.episode_count}")
                     self.env.render(save_dir, info=f"episode_{self.episode_count}")
 
-                # Checkpointing
+                # checkpointing
                 if self.save_model and (self.episode_count % self.save_intervals == 0):
                     save_path = self.experiment_manager.get_model_path(filename=f"episode_{self.episode_count}")
                     self.actor.save(save_path)
 
                 self.env.reset()
-
                 self.episode_reward = 0
                 self.episode_len = 0
-
                 self.steps_done = torch.tensor(i+1, device=self.device)
 
                 break
         
-        # average actor loss over steps
+        # loss normalization
         actor_loss = actor_loss / self.steps_done
 
         return actor_loss
@@ -102,8 +106,7 @@ class BPTT:
         self.env.reset()
 
         while self.step_count <= self.max_steps:
-
-            # === ACTOR UPDATE ===
+            # actor update
             self.actor_optimizer.zero_grad()
             actor_loss = self.compute_actor_loss()
             actor_loss.backward()
@@ -116,20 +119,22 @@ class BPTT:
             except:
                 pass
 
+            # logging 
             if self.track:
                 self.experiment_manager.log_metrics(metrics={'actor_loss': actor_loss}, step=self.step_count)
 
         print("Training finished.")
 
-        # Checkpointing
+        # checkpointing
         if self.save_model:
             save_path = self.experiment_manager.get_model_path(filename="last")
             self.actor.save(save_path)
 
+        # final evaluation
         self.eval()
 
     def eval(self):
-
+        # evaluation rollouts
         for i in range(self.evaluations):
 
             self.episode_reward = 0
@@ -140,21 +145,24 @@ class BPTT:
 
             while not done:
 
-                # action
+                # compute action
                 actions = self.actor(state.unsqueeze(0), self.env.get_parameters().unsqueeze(0), eval=True) if self.parametric else self.actor(state.unsqueeze(0), eval=True)
 
+                # apply action
                 state, rew, done, info = self.env.step(torch.tanh(actions))
-                
                 self.step_count += 1
                 self.episode_reward += rew.clone().detach().item()
                 self.episode_len += 1
 
+                # episode ends
                 if done:
                     print(f"Eval Episode {i} | Reward: {self.episode_reward:.4f} | Episode Length: {self.episode_len}")
 
+                    # logging
                     if self.track:
                         self.experiment_manager.log_metrics(metrics={'eval/episode_reward': self.episode_reward}, step=self.step_count)
 
+                    # rendering 
                     if self.env.save_plots or self.env.save_gifs:
                         save_dir = self.experiment_manager.get_media_path(filename=f"eval_episode_{i}")
                         self.env.render(save_dir, info=f"eval_episode_{i}")

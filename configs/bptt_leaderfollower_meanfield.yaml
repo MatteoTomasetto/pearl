@@ -35,9 +35,9 @@ agent:
       head_units: [1024, 1024]
       activation: tanh
       actor_logstd_init: -1.0
+      deterministic: True
+      last_activation: False
     parametric: True
-    deterministic: True
-    last_activation: False
 
 # Trainer settings
 trainer:

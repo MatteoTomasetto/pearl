@@ -35,14 +35,14 @@ agent:
       head_units: [1024, 1024]
       activation: tanh
       actor_logstd_init: -1.0
+      deterministic: True
+      last_activation: False
     adjoint_net:
       state_units: [1024, 1024]
       param_units: [1024, 1024]
       head_units: [1024, 1024]
       activation: tanh
     parametric: True 
-    deterministic: True
-    last_activation: False
 
 # Trainer settings
 trainer:
@@ -51,8 +51,6 @@ trainer:
     max_steps: 100000
     actor_learning_rate: 0.00001
     adjoint_net_learning_rate: 0.00001
-    adam_betas: [0.9, 0.999]
-    adam_eps: 1e-08
     target_adjoint_net_alpha: 0.995
     adjoint_net_iterations: 32
     grad_clip: False

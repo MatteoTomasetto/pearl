@@ -1,0 +1,10 @@
+# ignore experiment logs and W&B data
+experiments/
+wandb/
+postprocessing/figures/
+postprocessing/rewards_data/
+
+# ignore Python bytecode
+**/__pycache__/
+*.py[cod]
+*$py.class

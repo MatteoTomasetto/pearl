@@ -30,11 +30,7 @@ if __name__ == "__main__":
     try:
         dir = manager.run_dir
         wandb.finish()
-
-        subprocess.run(
-            ["wandb", "sync", str(dir)],
-            check=False
-        )
+        subprocess.run(["wandb", "sync", str(dir)], check=False)
 
     except:
         pass
