@@ -79,14 +79,16 @@ class LeaderFollower_SingleAgent(gym.Env):
         self.t += self.dt
 
         # compute cost and reward
-        state_term = (self.state[0] - self.goal[0])**2 + (self.state[1] - self.goal[1])**2
+        dist_sq = (self.state[0] - self.goal[0])**2 + (self.state[1] - self.goal[1])**2
         if self.sparse_reward:
-            state_term = - self.soft_reward_scale * torch.exp(-self.soft_reward_damping * state_term)
+            state_term = - self.soft_reward_scale * torch.exp(-self.soft_reward_damping * dist_sq)
+        else:
+            state_term = dist_sq
         action_term = self.control_scale * (u[0]**2 + u[1]**2)
         if self.follow_target:
             soft_bonus = 0
         else:
-            soft_bonus = self.soft_reward_scale * torch.exp(-self.soft_reward_damping * state_term)
+            soft_bonus = self.soft_reward_scale * torch.exp(-self.soft_reward_damping * dist_sq)
 
         cost = state_term + action_term - soft_bonus
         reward = -cost
@@ -98,7 +100,7 @@ class LeaderFollower_SingleAgent(gym.Env):
         # set done and success 
         done = False
         if not self.follow_target:
-            if state_term < self.goal_radius_sq:
+            if dist_sq < self.goal_radius_sq:
                 print(f"Target reached! -- Soft bonus {soft_bonus}")
                 done = True
                 self.success = True
