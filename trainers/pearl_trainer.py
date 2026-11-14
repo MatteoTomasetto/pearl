@@ -146,10 +146,9 @@ class PEARL:
                     self.adjoints.insert(0, self.gammas[i] * self.target_adjoint_net(self.state_buf[i].detach().unsqueeze(0))[0] / self.steps_done)
 
             td_lambda = self.adjoint_net_lambda
-            if not self.done and i == len(self.state_buf) - 1:
+            if i == len(self.state_buf) - 1:          
                 td_lambda = 0.0
-            if self.done:
-                td_lambda = 1.0
+                # td_lambda = 1.0 if termination else 0.0
             grad_outputs = (td_lambda * self.target_adjoints[0] + (1.0 - td_lambda) * self.adjoints[0])
             self.target_adjoints.insert(0, torch.autograd.grad(self.state_buf[i], self.state_buf[i-1], grad_outputs = grad_outputs, retain_graph=True, create_graph=False)[0] - torch.autograd.grad(self.rew_buf[i-1], self.state_buf[i-1], retain_graph=True, create_graph=False)[0])
 
@@ -162,9 +161,9 @@ class PEARL:
 
         target = torch.stack(self.target_adjoints)
 
-        if not self.done:
-            predicted = predicted[:-1]
-            target = target[:-1]
+        #if not termination:
+        predicted = predicted[:-1]
+        target = target[:-1]
 
         return torch.nn.functional.mse_loss(predicted, target)
 
@@ -205,8 +204,8 @@ class PEARL:
             self.compute_adjoints()
 
             # correct terminal adjoint in the tape
-            if not self.done:    
-                self.state_buf[-1].register_hook(lambda g, adj = self.adjoints[-1]: g + adj) # override final adjoint manually
+            #if not termination:    
+            self.state_buf[-1].register_hook(lambda g, adj = self.adjoints[-1]: g + adj) # override final adjoint manually
 
             # actor update
             actor_loss.backward()
