@@ -14,7 +14,7 @@ env:
     random_init: True
     parametric_flow: False
     follow_target: True
-    sparse_reward: True 
+    sparse_reward: False 
     soft_reward_scale: 100.0
     soft_reward_damping: 100.0
     save_plots: False
