@@ -72,7 +72,7 @@ class Actor(nn.Module):
             self.actor = nn.Sequential(*head_modules).to(self.device)
 
         else:
-            layer_dims = [state_dim] + cfg_network['actor']['units'] + [action_dim]
+            layer_dims = [state_dim] + cfg_network['actor']['state_units'] + [action_dim]
 
             modules = []
             for i in range(len(layer_dims) - 1):
@@ -181,7 +181,7 @@ class Critic(nn.Module):
 
             self.critic = nn.Sequential(*head_modules).to(self.device)
         else:
-            layer_dims = [state_dim] + cfg_network['critic']['units'] + [1]
+            layer_dims = [state_dim] + cfg_network['critic']['state_units'] + [1]
 
             modules = []
             for i in range(len(layer_dims) - 1):
@@ -278,7 +278,7 @@ class AdjointNet(nn.Module):
 
             self.adjoint_net = nn.Sequential(*head_modules).to(self.device)
         else:
-            self.layer_dims = [state_dim] + cfg_network['adjoint_net']['units'] + [adjoint_dim]
+            self.layer_dims = [state_dim] + cfg_network['adjoint_net']['state_units'] + [adjoint_dim]
 
             modules = []
             for i in range(len(self.layer_dims) - 1):
