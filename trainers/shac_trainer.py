@@ -84,7 +84,8 @@ class SHAC:
             actions = self.actor(state.unsqueeze(0), self.env.get_parameters().unsqueeze(0)) if self.parametric else self.actor(state.unsqueeze(0))
 
             # apply action            
-            state, rew, done, info = self.env.step(torch.tanh(actions))
+            state, rew, terminated, truncated, info = self.env.step(torch.tanh(actions))
+            done = terminated or truncated
             self.step_count += 1
             self.episode_len += 1
 
@@ -257,7 +258,8 @@ class SHAC:
                 actions = self.actor(state.unsqueeze(0), self.env.get_parameters().unsqueeze(0), eval=True) if self.parametric else self.actor(state.unsqueeze(0), eval=True)
 
                 # apply action
-                state, rew, done, info = self.env.step(torch.tanh(actions))
+                state, rew, terminated, truncated, info = self.env.step(torch.tanh(actions))
+                done = terminated or truncated
                 self.step_count += 1
                 self.episode_reward += rew.clone().detach().item()
                 self.episode_len += 1

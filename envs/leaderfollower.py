@@ -49,9 +49,6 @@ class LeaderFollower_SingleAgent(gym.Env):
         # define state
         self.state = None
 
-        # define success         
-        self.success = False
-
         # lists for states and controls
         self.states_plot = []
         self.controls_plot = []
@@ -97,35 +94,23 @@ class LeaderFollower_SingleAgent(gym.Env):
         self.states_plot.append(self.state.detach().cpu().numpy())
         self.controls_plot.append(u.detach().cpu().numpy())
 
-        # set done and success 
-        done = False
-        if not self.follow_target:
-            if dist_sq < self.goal_radius_sq:
-                print(f"Target reached! -- Soft bonus {soft_bonus}")
-                done = True
-                self.success = True
-        
-        time_over = False
-        if self.t >= self.T:
-            done = True
-            time_over = True
+        # set terminated and truncated 
+        terminated = dist_sq < self.goal_radius_sq if not self.follow_target else False
+        truncated = self.t >= self.T
 
         info = {
             'state_cost': state_term.detach(),
             'action_cost': action_term.detach(),
             'reward': reward.detach(),
-            'cost': cost.detach(),
-            'success': self.success,
-            'time_over': time_over
-        }
+            'cost': cost.detach()
+            }
 
-        return self.state, reward, done, info
+        return self.state, reward, terminated, truncated, info
   
     def reset(self):
         ''' Reset environment to initial state and return initial observation ''' 
         # reset time and success
         self.t = torch.tensor(0.0, device=self.device, dtype=self.dtype)
-        self.success = False
 
         # reset state
         if self.random_init:
@@ -424,8 +409,6 @@ class LeaderFollower_MeanField(gym.Env):
 
     def step(self, u):
         ''' Step function for the environment evolution '''
-        if self.done:
-            raise RuntimeError("Environment is done. Please reset.")
 
         # update the target position
         self.move_target()
@@ -442,8 +425,11 @@ class LeaderFollower_MeanField(gym.Env):
           
         # update time
         self.t += float(self.dt)
-        self.done = self.t >= self.T
-    
+        
+        # set terminated and truncated
+        terminated = False
+        truncated = self.t >= self.T
+
         # compute reward for logging
         reward = -cost.item()     
     
@@ -452,7 +438,7 @@ class LeaderFollower_MeanField(gym.Env):
         # update state
         self.y = y_new
 
-        return y_new, -cost, self.done, info
+        return y_new, -cost, terminated, truncated, info
 
     def compute_state(self, y_old, u):
         ''' Solve the Fokker-Planck equation with a double gyre transport term '''
@@ -498,7 +484,6 @@ class LeaderFollower_MeanField(gym.Env):
         ''' Reset environment to initial state and return initial observation ''' 
         # reset time and cost
         self.t = 0.0
-        self.done = False
 
         # reset state
         if self.random_init:

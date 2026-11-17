@@ -9,19 +9,19 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--agent-type', type=str, default='pearl',
+    parser.add_argument('--agent', type=str, default='pearl',
                         help='Agent type (bptt, shac, pearl).')
-    parser.add_argument('--experiment-type', type=str, default='leaderfollower_singleagent',
-                        help='Experiment type (leaderfollower_singleagent, leaderfollower_meanfield).')
+    parser.add_argument('--env', type=str, default='leaderfollower_singleagent',
+                        help='Environment type (leaderfollower_singleagent, leaderfollower_meanfield).')
     parser.add_argument('--seed', type=int, default=0,
                         help='Seed.')
     args = parser.parse_args()
 
     seed = args.seed
-    agent_type = args.agent_type
-    experiment_type = args.experiment_type
+    agent_type = args.agent
+    env_type = args.env
 
-    with open("configs/{}_{}.yaml".format(agent_type, experiment_type), "r") as f:
+    with open("configs/{}_{}.yaml".format(agent_type, env_type), "r") as f:
         config_dict = yaml.safe_load(f)
         manager = ExperimentManager(config_dict, seed)
         trainer = manager.instantiate()

@@ -9,9 +9,9 @@
 
 ## Quickstart
 
-The file `run.py` allows to run and reproduce all the experiments in the paper. One can simply choose the `--agent-type` and the `--experiment-type` and the code does the rest.
+The file `run.py` allows to run and reproduce all the experiments in the paper. One can simply choose the `--agent` and the `--env` and the code does the rest.
 ```bash
-python run.py --agent-type={bptt, shac, pearl} --experiment-type={leaderfollower_singleagent, leaderfollower_meanfield}
+python run.py --agent={bptt, shac, pearl} --env={leaderfollower_singleagent, leaderfollower_meanfield}
 ```
 
 ## Getting started

@@ -50,7 +50,7 @@ class PEARL:
         self.target_adjoints = []
        
         # utils
-        self.done = False
+        self.terminated = self.truncated = False
         self.steps_done = self.steps_num
 
     def compute_actor_loss(self):
@@ -60,7 +60,6 @@ class PEARL:
         rew_acc = torch.zeros(1, device=self.device)
         gamma = torch.tensor(1.0, device=self.device)        
         actor_loss = torch.tensor(0.0, device=self.device)
-        self.done = False
         self.steps_done = torch.tensor(self.steps_num, device=self.device)
 
         # short-horizon rollout
@@ -75,7 +74,8 @@ class PEARL:
             actions = self.actor(state.unsqueeze(0), self.env.get_parameters().unsqueeze(0)) if self.parametric else self.actor(state.unsqueeze(0))
 
             # apply action
-            state, rew, self.done, info = self.env.step(torch.tanh(actions))
+            state, rew, self.terminated, self.truncated, info = self.env.step(torch.tanh(actions))
+            done = self.terminated or self.truncated
             self.step_count += 1
             self.episode_len += 1
 
@@ -91,7 +91,7 @@ class PEARL:
             gamma = gamma * self.gamma
 
             # compute actor loss at the end of the episode/short-horizon
-            if self.done or i == self.steps_num - 1:
+            if done or i == self.steps_num - 1:
                 actor_loss = -rew_acc
 
                 self.state_buf.append(state)
@@ -100,7 +100,7 @@ class PEARL:
                     self.param_buf.append(self.env.get_parameters())
 
             # episode ends
-            if self.done:
+            if done:
 
                 self.episode_count += 1
                 print(f"Episode {self.episode_count} | Reward: {self.episode_reward:.4f} | Episode Length: {self.episode_len}")
@@ -147,8 +147,7 @@ class PEARL:
 
             td_lambda = self.adjoint_net_lambda
             if i == len(self.state_buf) - 1:          
-                td_lambda = 0.0
-                # td_lambda = 1.0 if termination else 0.0
+                td_lambda = 1.0 if self.terminated else 0.0
             grad_outputs = (td_lambda * self.target_adjoints[0] + (1.0 - td_lambda) * self.adjoints[0])
             self.target_adjoints.insert(0, torch.autograd.grad(self.state_buf[i], self.state_buf[i-1], grad_outputs = grad_outputs, retain_graph=True, create_graph=False)[0] - torch.autograd.grad(self.rew_buf[i-1], self.state_buf[i-1], retain_graph=True, create_graph=False)[0])
 
@@ -161,9 +160,9 @@ class PEARL:
 
         target = torch.stack(self.target_adjoints)
 
-        #if not termination:
-        predicted = predicted[:-1]
-        target = target[:-1]
+        if not self.terminated:
+            predicted = predicted[:-1]
+            target = target[:-1]
 
         return torch.nn.functional.mse_loss(predicted, target)
 
@@ -204,8 +203,8 @@ class PEARL:
             self.compute_adjoints()
 
             # correct terminal adjoint in the tape
-            #if not termination:    
-            self.state_buf[-1].register_hook(lambda g, adj = self.adjoints[-1]: g + adj) # override final adjoint manually
+            if not self.terminated:    
+                self.state_buf[-1].register_hook(lambda g, adj = self.adjoints[-1]: g + adj) # override final adjoint manually
 
             # actor update
             actor_loss.backward()
@@ -261,7 +260,8 @@ class PEARL:
                 actions = self.actor(state.unsqueeze(0), self.env.get_parameters().unsqueeze(0), eval=True) if self.parametric else self.actor(state.unsqueeze(0), eval=True)
 
                 # apply action
-                state, rew, done, info = self.env.step(torch.tanh(actions))
+                state, rew, terminated, truncated, info = self.env.step(torch.tanh(actions))
+                done = terminated or truncated
                 self.step_count += 1
                 self.episode_reward += rew.clone().detach().item()
                 self.episode_len += 1

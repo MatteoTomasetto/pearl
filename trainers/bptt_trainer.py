@@ -34,8 +34,6 @@ class BPTT:
         self.episode_len = 0
         self.episode_count = 0
 
-        # utils
-        self.steps_done = self.steps_num
 
     def compute_actor_loss(self):
 
@@ -44,7 +42,7 @@ class BPTT:
         rew_acc = torch.zeros(1,  device=self.device)
         gamma = torch.tensor(1.0, device = self.device)       
         actor_loss = torch.tensor(0.0, device=self.device)
-        self.steps_done = torch.tensor(self.steps_num, device=self.device)
+        steps_done = torch.tensor(self.steps_num, device=self.device)
 
         # short-horizon rollout
         for i in range(self.steps_num):
@@ -52,7 +50,8 @@ class BPTT:
             actions = self.actor(state.unsqueeze(0), self.env.get_parameters().unsqueeze(0)) if self.parametric else self.actor(state.unsqueeze(0))
 
             # apply action
-            state, rew, done, info = self.env.step(torch.tanh(actions))
+            state, rew, terminated, truncated, info = self.env.step(torch.tanh(actions))
+            done = terminated or truncated
             self.step_count += 1
             self.episode_len += 1
 
@@ -93,12 +92,12 @@ class BPTT:
                 self.env.reset()
                 self.episode_reward = 0
                 self.episode_len = 0
-                self.steps_done = torch.tensor(i+1, device=self.device)
+                steps_done = torch.tensor(i+1, device=self.device)
 
                 break
         
         # loss normalization
-        actor_loss = actor_loss / self.steps_done
+        actor_loss = actor_loss / steps_done
 
         return actor_loss
 
@@ -149,7 +148,8 @@ class BPTT:
                 actions = self.actor(state.unsqueeze(0), self.env.get_parameters().unsqueeze(0), eval=True) if self.parametric else self.actor(state.unsqueeze(0), eval=True)
 
                 # apply action
-                state, rew, done, info = self.env.step(torch.tanh(actions))
+                state, rew, terminated, truncated, info = self.env.step(torch.tanh(actions))
+                done = terminated or truncated
                 self.step_count += 1
                 self.episode_reward += rew.clone().detach().item()
                 self.episode_len += 1
