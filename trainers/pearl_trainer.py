@@ -16,8 +16,8 @@ class PEARL:
 
         # config params
         params = config['trainer_params']
-        self.actor_optimizer = torch.optim.Adam(params=self.actor.parameters(), lr=float(params["actor_learning_rate"]))
-        self.adjoint_net_optimizer = torch.optim.Adam(self.adjoint_net.parameters(), lr=float(params["adjoint_net_learning_rate"]))
+        self.actor_optimizer = torch.optim.Adam(params=self.actor.parameters(), lr=float(params["actor_learning_rate"]), fused = True)
+        self.adjoint_net_optimizer = torch.optim.Adam(self.adjoint_net.parameters(), lr=float(params["adjoint_net_learning_rate"]), fused = True)
         self.seed = params['seed']
         self.max_steps = params['max_steps']
         self.steps_num = params['short_horizon']
